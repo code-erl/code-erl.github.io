@@ -1,2 +1,8 @@
-# code-erl.github.io
-The website for Patrick Williams' OCR Exam Reference Language Interpreter. Find the actual repository at https://github.com/patrickWilliams07/ocr-erl-interpreter
+# OCR Exam Reference Language Interpreter
+
+### Link to Interpreter web page:
+
+## https://code-erl.github.io/interpreter.html  
+
+The actual repository for this project is at:
+https://github.com/patrickWilliams07/ocr-erl-interpreter
