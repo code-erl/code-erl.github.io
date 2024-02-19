@@ -1,8 +1,5 @@
 # OCR Exam Reference Language Interpreter
 
-### Link to Interpreter web page:
+## [Click HERE to Access the Interpreter](https://github.com/patrickWilliams07/ocr-erl-interpreter)
 
-## https://code-erl.github.io/interpreter.html  
-
-The actual repository for this project is at:
-https://github.com/patrickWilliams07/ocr-erl-interpreter
+The actual repository for this project is [here](https://github.com/patrickWilliams07/ocr-erl-interpreter):  
