@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR ERL Interpreter</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="./syntax-highlighting/codemirror.css">
+    <link rel="stylesheet" href="./syntax-highlighting/monokai.css">
+    <script src="./syntax-highlighting/codemirror.js"></script>
+    <script src="./syntax-highlighting/simpleMode.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id = "frame">
+        <div id="title">OCR Exam Reference Language Interpeter</div>
+        <div id="version">Beta v1.2<br>by Patrick Williams</div>
+
+        <!-- Loop Speed -->
+        <input type="range" id="loopWait" min="0" value="1" max="2" step="1">
+        <div id="waitMessage">Adjust loop speed with slider:<br><br>Default: Fast loops with semi-regular printing<br>The best option for most programs</div>
+
+        <!-- Links -->
+        <div id="pages">
+            <div class="page">About Project</div>
+            <a class="page" id="docs" href="https://www.ocr.org.uk/Images/558027-specification-gcse-computer-science-j277.pdf#page=27" target="_blank">Documentation</a>
+            <div class="page">Code Examples</div>
+            <div class="page">Exam Questions</div>
+            <a class="page" id="report" href="https://forms.office.com/e/HSrVJjfCHR" target="_blank">Report Bug</a>
+        </div>
+
+        <!-- Execution -->
+        <textarea id="input"></textarea>
+        <textarea id="output" placeholder=
+"Welcome to the OCR ERL Interpreter! 
+Please enter your code into the editor on the right,
+The output of code will be displayed in this window."
+        readonly></textarea>
+        <button id="run" title="Execute ERL code">Run ➤</button>
+
+
+        <!-- Uploading ERL -->
+        <button class="rect" id="upload" title="Upload ERL or .txt file from computer">📂</button>
+        <input type="file" id="uploadFile" style="display:none" accept=".txt,.erlcode">
+
+        <!-- Downloading ERL -->
+        <button class="rect" id="download" title="Download current code as ERL file to save">💾</button>
+        <a download="myCode.erlcode" href="data:text/text;utf8," id="downloadFile" style="display:none"></a>
+
+        <div id="files"></div>
+        <script src="./src.js"></script>
+    </div>
+</body>
+</html>
