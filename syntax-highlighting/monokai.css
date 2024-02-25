@@ -32,6 +32,11 @@
 .cm-s-monokai .cm-comment {
 	color: #75715E;
 }
+
+.cm-s-monokai .cm-visible-comment {
+	color: #c6c1a4;
+}
+
 .cm-s-monokai .cm-string {
 	color: #E6DB74;
 }

@@ -12,7 +12,7 @@ body {
 }
 
 #title {
-    grid-area: 1 / 1 / 1 / 28;
+    grid-area: 1 / 1 / 1 / 31;
     color: whitesmoke;
     font-size: 40px;
     text-align: center;
@@ -26,15 +26,11 @@ body {
 .page {
     padding-left: 1vw;
     font-size: 18px;
-    color: grey;
+    color: whitesmoke;
+    cursor: pointer;
     text-decoration: underline;
     flex-grow: 1;
     align-self: center;
-}
-
-#report, #docs {
-    color: whitesmoke;
-    cursor: pointer;
 }
 
 #output {
@@ -67,39 +63,39 @@ button {
 
 .rect {
     border-radius: 10px;
-    width: 2.5vw;
-    height: 2.5vw;
+    width: 50px;
+    height: 50px;
     justify-self: right;
-    font-size: 25px;
+    font-size: 30px;
 }
 
 #upload {
     grid-area: 3 / 17 / 4 / 18;
     z-index: 2;
-    margin: 0.3vw 0.3vw 0.1vw;
+    margin: 6px 6px 3px;
 }
 
 #download {
     grid-area: 4 / 17 / 5 / 18;
     z-index: 3;
-    margin: 0vw 0.3vw;
+    margin: 0px 6px;
 }
 
 #run {
     grid-area: 2 / 27 / 4 / 31;
-    height: 7vh;
-    font-size: 27px;
+    height: 70px;
+    font-size: 30px;
     border-radius: 35px;
-    margin-top: 3.5vh;
+    margin-top: 45px;
 }
 
-.active {
+#run.active, #deleteFile {
     background-color: rgb(108, 10, 10);
     box-shadow: 0 5px rgb(54, 5, 5);
 
 }
 
-.active:hover {
+#run.active:hover, #deleteFile:hover {
     background-color: rgb(142, 0, 0);
 }
 
@@ -111,9 +107,8 @@ button:hover:not(.active) {
     background-color: #4e9f3d
 }
 
-#files {
-    grid-area: 3 / 18 / 4 / 27;
-    /* outline: 1px dashed white; */
+.fileOption {
+    display: none;
 }
 
 #version {
@@ -121,19 +116,91 @@ button:hover:not(.active) {
     color: whitesmoke;
 }
 
-#loopWait {
-    grid-area: 1 / 26 / 2 / 29;
+#renameFile {
+    grid-area: 4 / 29 / 5 / 31;
     z-index: 2;
-    outline: none;
-    opacity: 0.5;
-    width: 70%;
-    justify-self: center;
+    margin: 6px 6px 3px;
 }
 
-#waitMessage{
-    grid-area: 1 / 24 / 3 / 31;
-    color: grey;
+#customDownload {
+    grid-area: 5 / 29 / 6 / 31;
+    z-index: 3;
+    margin: 0px 6px 3px;
+}
+
+#resetFile {
+    grid-area: 6 / 29 / 7 / 31;
+    z-index: 3;
+    margin: 0px 6px 3px;
+}
+
+#deleteFile {
+    grid-area: 7 / 29 / 8 / 31;
+    z-index: 3;
+    margin: 0px 6px;
+}
+
+#fileName {
+    grid-area: 3 / 18 / 4 / 22;
+    color: white;
+    background-color: #23481c;
+    border: none;
+    box-shadow: 0 5px #152a11;
+    height: 50px;
+    border-radius: 10px;
     text-align: center;
-    font-size: 12px;
-    padding-top: 0.25vh;
+    vertical-align: middle;
+    line-height: 50px;
+    font-size: 18px;
+}
+
+.fileNavigation {
+    margin-top: 6px;
+}
+
+#manageFiles {
+    cursor: default;
+    pointer-events: none;
+}
+
+#manageFiles.active {
+    background-color: #23481c;
+    box-shadow: 0 5px #152a11;
+}
+
+#fileDropdown {
+    position: relative;
+    display: inline-block;
+    grid-area: 3 / 22 / 4 / 23;
+}
+
+#dropdownContents {
+    border-radius: 6px;
+    display: none;
+    position: absolute;
+    background-color: #418633;
+    min-width: 230px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 3;
+    border: 1px solid #418633;
+}
+
+#dropdownContents div {
+    border-radius: 6px;
+    color: whitesmoke;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+#dropdownContents div:hover {background-color: #356e2a;}
+
+#fileDropdown:hover:not(.active) #dropdownContents {display: block;}
+
+#fileDropdown:hover:not(.active) #manageFiles {background-color: #4e9f3d;}
+
+#console, #add, #customUpload {
+    background-color: #295d1f;
+    border: 3px solid #418633;
 }

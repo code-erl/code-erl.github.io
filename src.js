@@ -19,13 +19,6 @@
 //      website URL:     tbd.
 
 ////////////////
-// IMPORTS
-////////////////
-
-// const prompt = require('prompt-sync')()
-// const fs = require('fs')
-
-////////////////
 // SYMBOL TABLE
 ////////////////
 
@@ -828,7 +821,7 @@ class Print extends Subroutine {
             output.push(result.display())
         }
         outputPrint(output.join(' '))
-        // console.log(output.join(' ')) // ONLY PRINT STATEMENT
+        await wait()
         return Subroutine.nullReturn
     }
 }
@@ -868,23 +861,17 @@ class Input extends Subroutine {
             if ($("#output").prop("selectionStart") < before.length){ // if cursor moved
                 $("#output").prop("selectionStart", before.length+1) // move back
             }
-            await Input.wait() // wait
+            await wait() // wait
         }
         $("#output").attr("readonly", true) // no longer can type
         if (!Evaluator.active){
-            outputPrint('', true) // newline for abort message
+            if ($("#output").val().length > 0){
+                outputPrint('', true) // newline for abort message
+            }
             return new Abort()
         }
         let after = $("#output").val() // value afterwards to get contents
         return new StringType(call.position, call.line, after.slice(before.length, -1))
-    }
-    
-    static wait(){
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve()
-            }, 10 // modify to change rate of input checking
-        )})      // in milliseconds
     }
 }
 
@@ -1366,6 +1353,10 @@ class FileStorage {
         this.files = []
     }
 
+    get length(){
+        return this.files.length
+    }
+
     get(fileName) { // returns file based on name
         for (let file of this.files){
             if (file.name == fileName) {
@@ -1378,11 +1369,49 @@ class FileStorage {
     addNew(fileName) {
         let file = this.get(fileName)
         if (file == null){ // if it doesnt exist, creates
+            $(`<div id="${(fileName)}">📎 ${fileName}</div>`).insertBefore( "#add" )
             this.files.push(new FileItem(fileName))
         }
         else { // otherwise it will reset the current file
             file.reset()
         }
+    }
+
+    getNewName(fileName){
+        if (this.get(fileName) == null){ // name is not taken
+            return fileName
+        }
+        let i = 1 // iterates until avaliable name is free
+        let parts = fileName.split('.')
+        while (this.get(`${parts[0]} (${i}).${parts[1]}`) != null){
+            i++
+        }
+        return `${parts[0]} (${i}).${parts[1]}`
+    }
+
+    forceAddNew(fileName, contents="") {
+        let name = this.getNewName(fileName)
+        this.files.push(new FileItem(name, contents))
+        return name
+    }
+
+    rename(oldName, newName){
+        let file = this.get(oldName) // get file to rename
+        let avaliable = this.getNewName(newName)
+        file.name = avaliable // updates name
+        return avaliable
+    }
+
+    storeAll() { // updates all the stores
+        for (let file of this.files){
+            file.storedContents = file.contents
+        }
+    }
+
+    delete(fileName){
+        this.files = this.files.filter( (file) => {
+            file.name != fileName
+        })
     }
 
     import(fileName) { // only used manually
@@ -1398,6 +1427,7 @@ class FileItem {
     constructor(name, contents=""){
         this.name = name
         this.contents = contents
+        this.storedContents = ""
     }
 
     reset(){ // resets the contents
@@ -1406,6 +1436,14 @@ class FileItem {
 
     write(toWrite){
         this.contents += toWrite
+    }
+
+    rewrite(toWrite){
+        this.contents = toWrite
+    }
+
+    writeStored(){
+        this.contents = this.storedContents
     }
 }
 
@@ -1452,9 +1490,6 @@ class Open extends Subroutine {
         if (!(fileName instanceof StringType)){ // must be string
             return new EvaluationError(call, `Expected file name to be type String, not ${fileName.typeAsString}`)
         }
-        // if (!fileName.value.endsWith(".txt") && !fileName.value.endsWith(".csv")){
-        //     return new EvaluationError(fileName, "Cano only open files with '.txt' or '.csv' extentions")
-        // }
         let file = Evaluator.files.get(fileName.value) // returns the file 
         if (file == null) { // does not exist
             return new EvaluationError(call, `A file named ${fileName.value} does not exist`)
@@ -1475,9 +1510,9 @@ class NewFile extends Subroutine {
         if (!(fileName instanceof StringType)){
             return new EvaluationError(call, `Expected file name to be type String, not ${fileName.typeAsString}`)
         } // creates new file, addNew manages if it resets the file
-        // if (!fileName.value.endsWith(".txt") && !fileName.value.endsWith(".csv")){
-        //     return new EvaluationError(fileName, "Cano only create files with '.txt' or '.csv' extentions")
-        // }
+        if (!validateFileName(fileName.value)){
+            return new EvaluationError(fileName, "Can only create files with '.txt' or '.csv' extentions, containing a single '.'")
+        }
         Evaluator.files.addNew(fileName.value)
     }
 }
@@ -2815,7 +2850,6 @@ class Evaluator {
     static global
     static currentScope
     static files = new FileStorage()
-    static iterationsUntilWait = 32
 
     async evaluate_loop(loop){
         let iterationsSinceWait = 0
@@ -2833,11 +2867,10 @@ class Evaluator {
                 return new Abort()
             }
             iterationsSinceWait++
-            if (iterationsSinceWait >= Evaluator.iterationsUntilWait){
-                await Evaluator.wait()
+            if (iterationsSinceWait >= 128){
+                await wait()
                 iterationsSinceWait = 0
             }
-            // await Evaluator.wait()
             condition = await loop.evaluate_condition()
             if (condition instanceof Error){
                 condition
@@ -2845,14 +2878,6 @@ class Evaluator {
         }
         loop.reset()
         return null
-    }
-
-    static wait(){
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve()
-            }, 4 // modify to change loop delay
-        )})      // in milliseconds
     }
 
     async evaluate_single_ast(ast){
@@ -2957,6 +2982,7 @@ class Interpreter extends Evaluator{
 
     async run(){
         this.build_global()
+        Evaluator.files.storeAll()
         Input.lastKey = null
         if (!this.have_tokens){
             let result = this.make_tokens()
@@ -2998,6 +3024,9 @@ class Interpreter extends Evaluator{
 // USER INTERFACE
 ////////////////
 
+var savedOutput = "" // the contents of the output for switching
+var currentFile = "output" // name of current file that is opened
+
 $( () => {
 
     ////////////////
@@ -3008,21 +3037,24 @@ $( () => {
         start: [
             {regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string"},
             {regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string"},
-            {regex: /(?:const|global|for|to|next|step|while|endwhile|do|until|if|then|elseif|else|endif|switch|case|default|endswitch|array|procedure|endprocedure|function|return|endfunction)\b/,
-            token: "keyword"},
+            {regex: /endswitc/, token:"keyword", dedent: true, next: "endswitch"},
+            {regex: /(?:for|while|do|if|switch|case|procedure|function)\b/, token: "keyword", indent: true},
+            {regex: /(?:next|endwhile|until|endif|endswitch|endprocedure|endfunction)\b/, token: "keyword", dedent: true},
+            {regex: /(?:const|global|to|next|step|then|elseif|else|default|array|return)\b/ ,token: "keyword"},
             {regex: /(?:input|print|str|int|float|real|bool|ASC|CHR|open|newFile|random)\b/, token: "native"},
             {regex: /True|False/, token: "boolean"},
             {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
             {regex: /\/\/.*/, token: "comment"},
             {regex: /[-+\/\^*=<>]|!=|MOD|DIV|AND|OR|NOT/, token: "operator"},
-            {regex: /[\{\[\(]/, indent: true},
-            {regex: /[\}\]\)]/, dedent: true},
-            {regex: /([a-zA-Z_]\w*)(\.)([a-zA-Z_]\w*)/,
-            token: ["variable", null, "property"]},
+            {regex: /([a-zA-Z_]\w*)(\.)([a-zA-Z_]\w*)/, token: ["variable", null, "property"]},
             {regex: /[a-zA-Z_]\w*/, token: "variable"},
         ],
+        endswitch: [ // for double dedent
+            {regex: /h/, token:"keyword", dedent: true, next: "start"},
+            {regex: /(.|\n)*?/, next:"start"}
+        ],
         meta: {
-          lineComment: "//"
+          lineComment: "//",
         }
     });
     
@@ -3030,7 +3062,9 @@ $( () => {
         lineNumbers : true,
         theme: "monokai",
         mode: "erlcode",
-        autofocus: true
+        autofocus: true,
+        indentUnit: 4,
+        indentWithTabs: true
     })  
 
     ////////////////
@@ -3040,20 +3074,20 @@ $( () => {
     let interpreter = new Interpreter
 
     $("#run").click( async () => {
-        console.log(inputArea.getValue())
         if (Evaluator.active) { // checks if already running
             Evaluator.active = false
             $("#output").focus()
         } else {
+            loadOutput("output")
             $("#output").val('') // reset output
             $("#run").html("Stop 🛑") // change button text
-            $("#run").addClass("active") // keep button pushed down
+            $("#run ,#fileDropdown ,#manageFiles").addClass("active") // keep button pushed down
             $("#abort").show()
             Evaluator.active = true // make active 
             interpreter.set_plaintext_manually(inputArea.getValue())
             await interpreter.run() // wait for completion
         }
-        $("#run").removeClass("active")  // reset
+        $("#run ,#fileDropdown ,#manageFiles").removeClass("active")  // reset
         $("#run").html("Run ➤")          // to
         Evaluator.active = false         // original
         $("#abort").hide()
@@ -3078,40 +3112,154 @@ $( () => {
         let files = $("#uploadFile")[0].files
         reader.onload = () => {
             inputArea.setValue(reader.result)
+            $("#uploadFile").val('')
         }
         reader.readAsText(files[0])
     })
     
     $("#download").click( () => {
-        $("#downloadFile").attr("href","data:text/text;utf8," + $("#input").val()) // set file contents to input
-        if ($("#input").val().startsWith('//')){ // if starts with comment, custom name
-            $("#downloadFile").attr("download", $("#input").val().split('\n')[0].substring(3)  + ".erlcode")
+        $("#downloadFile").attr("href","data:text/text;utf8," + inputArea.getValue()) // set file contents to input
+        if (inputArea.getValue().startsWith('//')){ // if starts with comment, custom name
+            $("#downloadFile").attr("download", inputArea.getValue().split('\n')[0].substring(3)  + ".erlcode")
         } else { // otherwise default name
             $("#downloadFile").attr("download", "myCode.erlcode")
         } // click the anchor to trigger the download
         $("#downloadFile")[0].click()
     })
-    
-    $("#loopWait").on("input", () => {
-        let value = $("#loopWait").val()
-        if (value == "2") {
-            $("#waitMessage").html("Adjust loop speed with slider:<br><br>Fastest: Infinite loops will crash program<br>Printing will only occur after loop has completed")
-            Evaluator.iterationsUntilWait = Infinity
-        } else if (value == "1") {
-            $("#waitMessage").html("Adjust loop speed with slider:<br><br>Default: Fast loops with semi-regular printing<br>The best option for most programs")
-            Evaluator.iterationsUntilWait = 32
-        } else {
-            $("#waitMessage").html("Adjust loop speed with slider:<br><br>Slowest: Smooth, continuous printing<br>Avoid using for more complex programs")
-            Evaluator.iterationsUntilWait = 1
+
+    ////////////////
+    // FILE MODES
+    ////////////////
+
+    $("#add").click( () => {
+        let name = Evaluator.files.forceAddNew("newFile.txt")
+        $(`<div id="${(name)}">📎 ${name}</div>`).insertBefore( "#add" )
+        loadOutput(name)
+    })
+
+    $("#console").click( () => {
+        loadOutput("output")
+    })
+
+    $("#customUpload").click( () => {
+        $("#customUploadFile").click()
+    })
+
+    $('#fileDropdown div').click( (event) => {
+        let clicked = event.target.id
+        if (clicked == "add" || clicked == "console" || clicked == "customUpload"){
+            return
         }
+        loadOutput((clicked))
     });
+
+    function loadOutput(fileName) {
+        if (fileName == currentFile){
+            return
+        } // saving old
+        if (currentFile == "output"){
+            savedOutput = $("#output").val()
+        } else {
+            Evaluator.files.get(currentFile).rewrite($("#output").val())
+        } // if switching to output
+        if (fileName == "output"){
+            $("#output").val(savedOutput)
+            $("#output").attr("readonly", true)
+            $("#output").attr("placeholder",
+`Welcome to the OCR ERL Interpreter! 
+Please enter your code into the editor on the right,
+The output of code will be displayed in this window.
+
+Upload and download ERL files with the editor buttons
+Navigate the file system with the file icon above`)
+            $("#fileName").html("Console Output")
+            $('.fileOption').hide()
+        } else { // switching to file
+            $("#output").val(Evaluator.files.get(fileName).contents)
+            $("#output").attr("readonly", false)
+            $("#output").attr("placeholder",
+`This is the built in file editor!
+Type here to edit the file
+
+To rename the file, click the pencil
+To save the file, click the save icon
+Reset the file to its original value with the button
+To delete the file, click the bin`)
+            $("#fileName").html(fileName)
+            $('.fileOption').show()
+        } // final updates
+        currentFile = fileName
+        $("#output").focus()
+    }
+
+    $("#customUploadFile").change( () => {
+        let reader = new FileReader()
+        let files = $("#customUploadFile")[0].files
+        reader.onload = () => {
+            let name = Evaluator.files.forceAddNew(files[0].name, reader.result)
+            $(`<div id="${name}">📎 ${name}</div>`).insertBefore( "#add" )
+            $("#customUploadFile").val('')
+            loadOutput(name)
+        }
+        reader.readAsText(files[0])
+    })
+
+    ////////////////
+    // FILE OPTIONS
+    ////////////////
+
+    $("#renameFile").click( () => {
+        let inputName = prompt(`Enter the new name of '${currentFile}', with the file extention:`)
+        while (!validateFileName(inputName)){
+            inputName = prompt("Enter the new name in a valid format:\nIt must contain a single '.', and be a '.txt' or '.csv' file")
+        }
+        let name = Evaluator.files.rename(currentFile, inputName)
+        $($('#' + currentFile.replace('.', "\\."))[0]).text(`📎 ${name}`)
+        $($('#' + currentFile.replace('.', "\\."))[0]).attr("id", name)
+        currentFile = name
+        $("#fileName").html(name)
+    })
+
+    $("#customDownload").click( () => {
+        $("#downloadFile").attr("href","data:text/text;utf8," + $("#output").val())
+        $("#downloadFile").attr("download", currentFile)
+        $("#downloadFile")[0].click()
+    })
+
+    $("#resetFile").click( () => {
+        Evaluator.files.get(currentFile).writeStored() // reset the file
+        $("#output").val(Evaluator.files.get(currentFile).contents) // display
+    })
+
+    $("#deleteFile").click( () => {
+        let fileToDelete = currentFile
+        loadOutput("output")
+        Evaluator.files.delete(fileToDelete)
+        $($('#' + fileToDelete.replace('.', "\\."))[0]).remove()
+    })
 })
 
 ////////////////
-// PRINTING (must be outside)
+// GLOBAL FUNCTIONS
 ////////////////
 
 function outputPrint(message, newLine=true){
     $("#output").val($("#output").val() + message + (newLine ? '\n' : ''))
     $("#output").scrollTop($("#output")[0].scrollHeight)
+}
+
+function wait(){
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve()
+        }, 4 // modify to change rate of input checking
+    )})      // in milliseconds
+}
+
+function validateFileName(name){
+    name = name.split('.')
+    if (name.length != 2){
+        return false
+    }
+    return ["txt", "csv"].includes(name[name.length - 1])
 }

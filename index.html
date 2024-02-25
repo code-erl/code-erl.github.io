@@ -16,28 +16,25 @@
         <div id="title">OCR Exam Reference Language Interpeter</div>
         <div id="version">Beta v1.2<br>by Patrick Williams</div>
 
-        <!-- Loop Speed -->
-        <input type="range" id="loopWait" min="0" value="1" max="2" step="1">
-        <div id="waitMessage">Adjust loop speed with slider:<br><br>Default: Fast loops with semi-regular printing<br>The best option for most programs</div>
-
         <!-- Links -->
         <div id="pages">
-            <div class="page">About Project</div>
-            <a class="page" id="docs" href="https://www.ocr.org.uk/Images/558027-specification-gcse-computer-science-j277.pdf#page=27" target="_blank">Documentation</a>
-            <div class="page">Code Examples</div>
-            <div class="page">Exam Questions</div>
+            <a class="page" href="./syntax.html" target="_blank">The ERL Syntax Guide</a>
+            <a class="page" href="https://www.ocr.org.uk/Images/558027-specification-gcse-computer-science-j277.pdf#page=27" target="_blank">Official Documentation</a>
+            <div class="page" style="color: grey; cursor: default;">Exam Questions</div>
             <a class="page" id="report" href="https://forms.office.com/e/HSrVJjfCHR" target="_blank">Report Bug</a>
         </div>
-
+ 
         <!-- Execution -->
         <textarea id="input"></textarea>
         <textarea id="output" placeholder=
 "Welcome to the OCR ERL Interpreter! 
-Please enter your code into the editor on the right,
-The output of code will be displayed in this window."
+Please enter your code into the editor on the right
+The output of code will be displayed in this window
+
+Upload and download ERL files with the editor buttons
+Navigate the file system with the file icon above"
         readonly></textarea>
         <button id="run" title="Execute ERL code">Run ➤</button>
-
 
         <!-- Uploading ERL -->
         <button class="rect" id="upload" title="Upload ERL or .txt file from computer">📂</button>
@@ -46,6 +43,26 @@ The output of code will be displayed in this window."
         <!-- Downloading ERL -->
         <button class="rect" id="download" title="Download current code as ERL file to save">💾</button>
         <a download="myCode.erlcode" href="data:text/text;utf8," id="downloadFile" style="display:none"></a>
+
+        <!-- File Navigation -->
+        <div class="fileNavigation" id="fileName">Console Output</div>
+        <div id="fileDropdown">
+            <button class="rect fileNavigation" id="manageFiles" title="Save the current contents of this file">🗂️</button>
+            <div id="dropdownContents">
+                <div id="console">🖥️ Console Output</div>
+                <div id="add">🛠️ Create New File</div>
+                <div id="customUpload">📂 Upload a File</div>
+            </div>
+        </div>
+
+        <!-- Uploading File -->
+        <input type="file" id="customUploadFile" style="display:none" accept="text/plain">
+
+        <!-- File Options -->
+        <button class="rect fileOption" id="customDownload" title="Save the current contents of this file">💾</button>
+        <button class="rect fileOption" id="renameFile" title="Rename the file">✏️</button>
+        <button class="rect fileOption" id="resetFile" title="Reset this file to its original value">🔄</button>
+        <button class="rect fileOption" id="deleteFile" title="Remove this file from the Interpreter">🗑️</button>
 
         <div id="files"></div>
         <script src="./src.js"></script>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR ERL Syntax</title>
+    <link rel="stylesheet" href="./syntax-highlighting/codemirror.css">
+    <link rel="stylesheet" href="./syntax-highlighting/monokai.css">
+    <script src="./syntax-highlighting/codemirror.js"></script>
+    <script src="./syntax-highlighting/simpleMode.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            color: whitesmoke;
+            background-color: #0F0F0F;
+            font-family: monospace;
+        }
+
+        h1 {
+            font-size: 40px;
+            text-align: center;
+            font-weight: 100;
+        }
+        a {
+            font-size: 18px;
+            color: whitesmoke;
+            cursor: pointer;
+            text-decoration: underline;
+            align-self: center;
+        }
+    </style>
+</head>
+<body>
+    <a class="page" href="./index.html">Return To Interpreter</a>
+    <h1>Exam Reference Language Syntax</h1>
+    <div style="width: 80vw; margin: auto;">
+        <textarea class="syntax">
+// This is a layout of the syntax for the OCR Exam Reference Language
+// ERL has a lot of differences to other languages, such as Python
+// This document explains all of these differences so you can write ERL
+// This document can also be edited, so write your own algorithms to practice
+
+// ARITHMETIC
+
+(2 + 3) * 7 / 4    // Normal arithmetic works as expected
+3 ^ 7             // ERL uses ^ for powers, instead of **
+
+27 MOD 5    // ERL uses MOD and DIV for modulus and remainder divison
+16 DIV 7   // This is instead of % and // in python
+
+
+// VARIABLES
+
+x = 5                // variables do not need a keyword to be defined
+myVariable = "OCR"    // they can be of any type
+
+const pi = 3.1415   // use the const keyword to create constants that cannot be modified
+
+
+// BASIC FUNCTIONS
+
+print("hello world")                // printing is the same as python
+name = input("Enter your name: ")   // inputs also work similarly
+// comments can always be made with two slashes
+// prints with values seperated by commas will be printed with spaces between them
+
+
+// BOOLEANS AND COMPARISONS
+
+boolean = True                          // booleans require capitalisation
+result = NOT ( True AND False ) OR True   // the boolean operators are in full capitals
+
+check = value >= 7 AND name != "Pramukhi" // the boolean operators are as expected
+// the full list is >, >=, <, <=, == and !=
+
+
+// IF STATEMENTS
+
+if answer == "Yes" then  // then is required after each condition
+    print("Correct")    // this is instead of a colon, such as in python
+endif                 // if statements must be closed with endif
+
+
+if percentage >= 90 then      // multiple branches can be added
+    print("A*")
+elseif percentage >= 75 then  // elseif is the keyword for adding additional cases
+    print("A")
+elseif percentage >= 60 then  // then is also needed after each elseif condition
+    print("B")
+else               // else is used for a default case
+    print("C")     // it does not require then
+endif             // endif is always used
+
+// LOOPS
+
+answer = input("What is 3 * 7?")
+while answer != "21"                    // while loops can be created with the while keyword
+    print("Incorrect, try again")       // they are followed by a condition, with no colon afterwards
+    answer = input("What is 3 * 7?")   // they repeat while the condition is true
+endwhile                            // they must end with the endwhile keyword
+
+
+do                                       // do until loops are created with the do keyword
+    password = input("Enter password: ")   // they close with until followed by a condition
+until password == "Abc123"               // they repeat when the condition is false, and stop when it is true
+
+
+for i = 0 to 5  // counter controlled loops are created with for
+    print(i)   // they define a variable, with an initial value and final value
+next i        // they are always closed with next, followed by the variable fileName
+
+// when starting to run, for loops set the variable to the starting value
+// it will increment on each iteration, up until and including the final value
+// this means they are inclusive, wheras languages like python do not include the last value
+// for example, the loop above would print 0, 1, 2, 3, 4, 5
+
+for countdown = 10 to 1 step -1   // for loops can also be given a step
+    print(countdown)             // this is a positive or negative integer following the final value
+next countdown                  // in this case, the loop prints the numbers from 10 to 1 backwards
+
+
+// FUNCTIONS AND PROCEDURES
+
+procedure checkID(age)        // procedures are subroutines that do not return a value
+    if age >= 18 then       // they have an optional list of parameters that is defined on the first line
+        print("Allowed")   // the code inside them can use these parameters
+    else                 // any variables created will be removed after the procedure is over
+        print("Denied")
+    endif
+endprocedure   // procedures are closed with endprocedure
+
+checkID(21)    // they can be called with their name, followed by brackets with the parameters
+
+function square(number)   // functions return values
+    return number^2     // they stop running when a return statement is run
+endfunction            // they are closed with endfunction
+
+result = square(7)    // the results of a function can be used by being stored in variables
+
+global complete = False   // global variables can be changed by using the global keyword
+// this only works inside a function
+// if not used, a local variable with the same name will be made, and the original will be unchanged
+// global variables can still be acessed without the keyword, so long as a local with the same name does not exist
+
+
+// TYPE CASTING
+
+str(7.3)  // to a string from any type
+
+int("27")   // to an integer(
+int(4.3)   // when used on a float, it will be truncated
+int(True) // when used on a boolean, 1 or 0 will be returned
+
+float("7.3")  // to a float
+real(4)      // the real keyword can also be used
+
+bool("True")  // "True" or "False" will return their values
+bool(7)      // returns False if 0, otherwise returns True
+
+
+// ARRAYS
+
+array emptyArray[5] // creates an empty array with 5 items
+// arrays are always 0 indexed, so this will have indexes 0 to 4
+
+array colours = [ "red", "blue", "yellow", "green"] // they can also be made with items
+// the type of every item in array must be the same
+// this means that the array must be just strings, or just integers and so on
+
+colours[2] = "pink"   // values can be changed as expected
+print( colours[0] )  // as well as being acessed
+
+// there is no way to append or remove items from arrays
+// this is because they are a constant size, so always stay the same length
+
+// arrays can also have multiple dimensions
+array chessBoard[8, 8]  // this makes an empty 8 by 8 array
+array names = [ ["Patrick", "Williams"], ["Pramukhi", "Vadrevu"] ] // this also makes a 2D array
+
+names[0, 1] = "Frawley" // the items are acessed with commas seperating each index
+// this can continue for any number of dimensions
+// the length of all arrays inside an array must always be the same length
+
+
+// SWITCH STATEMENTS
+
+username = input("=> ")             // switch statements are created with a value to compare from
+switch username:                   // the switch statement value is followed by a colon
+    case "admin":                 // each case keyword is followed by a value and a colon
+        print("Administrator")    // the code inside will only be run if they match
+    case "user1":               // multiple cases can be created
+        print("User 1")
+    default:                      // default cases can be added at the end, the equivalent of else
+        print("Unauthorised")     // these also need a colon
+endswitch                       // a switch is closed by endswitch
+
+
+// BUILT-IN FUNCTIONS
+
+ASC("A") // returns the ascii value of a letter, in this case 65
+CHR(97)  // returns the character associated with an ascii value, in this case 'a'
+
+diceRoll = random(1, 6)    // will return a random integer from 1 to 6 inclusibe
+value = random(-3.0, 2.0)  // floats as arguments will return floats
+
+
+// STRING METHODS
+
+myString = "Hello World!"   // this will be the example string
+
+myString.length  // returns the length, in this case 12
+// length can also be used on arrays in this Interpreter, however it is not explicitly stated in OCR's ERL
+
+myString.substring(3, 6)  // this will return "lo Wor"
+// the first argument for substring is the index of the first character in the substring
+// the second argument will be the length of the substring
+// this is different from many languages, which often accept the start and end index, not length
+
+myString.substring(n, 1)  // this will return the character at position n
+
+myString.left(4) // this will give "Hell", the 4 left characters
+myString.right(n) // like left(), right() will return the n last characters in a string
+
+name = firstname + " " = surname  // strings can be concatenated with +
+print("The answer is:" + answer) // when used inside prints, they will not be seperated by spaces, unlike commas
+
+myString.upper // returns "HELLO WORLD!"
+myString.lower // returns "hello world!"
+// note there are no brackets () after upper or lower, unlike in python
+
+
+// FILE HANDLING
+
+file = open( "myFile.txt" ) // use the open keyword to open a file
+
+file.readLine() // returns the next line in the file
+file.endOfFile() // returns a boolean based on if the whole file has been read
+
+while NOT file.endOfFile()     // these can be used together, as shown
+    print( file.readLine() )   // this loop will output the entire contents of a file
+endwhile
+
+file.close() // files should be closed after being used
+
+newFile( "results.csv" )         // files can be made using newFile()
+results = open( "results.csv" )  // these still must be opened after creation
+
+results.writeLine( "55%" ) // values can be written to a file
+// this will always be written at the end of the file
+results.writeLine( "\n78%") // \n is required to write on a new line
+
+
+// This is now all of the features of the ERL
+// Return to the Interpreter to try yourself!</textarea>
+    </div>
+    <script>
+        $( () => {
+            CodeMirror.defineSimpleMode("erlcode", {
+                start: [
+                    {regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string"},
+                    {regex: /'(?:[^\\]|\\.)*?(?:'|$)/, token: "string"},
+                    {regex: /endswitc/, token:"keyword", dedent: true, next: "endswitch"},
+                    {regex: /(?:for|while|do|if|switch|case|procedure|function)\b/, token: "keyword", indent: true},
+                    {regex: /(?:next|endwhile|until|endif|endswitch|endprocedure|endfunction)\b/, token: "keyword", dedent: true},
+                    {regex: /(?:const|global|to|next|step|then|elseif|else|default|array|return)\b/ ,token: "keyword"},
+                    {regex: /(?:input|print|str|int|float|real|bool|ASC|CHR|open|newFile|random)\b/, token: "native"},
+                    {regex: /True|False/, token: "boolean"},
+                    {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
+                    {regex: /\/\/.*/, token: "visible-comment"},
+                    {regex: /[-+\/\^*=<>]|!=|MOD|DIV|AND|OR|NOT/, token: "operator"},
+                    {regex: /([a-zA-Z_]\w*)(\.)([a-zA-Z_]\w*)/, token: ["variable", null, "property"]},
+                    {regex: /[a-zA-Z_]\w*/, token: "variable"},
+                ],
+                endswitch: [ // for double dedent
+                    {regex: /h/, token:"keyword", dedent: true, next: "start"},
+                    {regex: /(.|\n)*?/, next:"start"}
+                ],
+                meta: {
+                lineComment: "//",
+                }
+            });
+            
+            CodeMirror.fromTextArea($(".syntax")[0], {
+                lineNumbers : true,
+                theme: "monokai",
+                mode: "erlcode",
+                indentUnit: 4,
+                indentWithTabs: true
+            })
+        })
+    </script>
+</body>
+</html>
