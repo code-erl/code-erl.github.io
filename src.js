@@ -584,6 +584,7 @@ class ArrayType extends Token {
     }
 
     display(){
+        console.log("printed")
         let displayed = []
         for (let item of this.contents){
             if (item == ArrayType.nullValue){
@@ -622,7 +623,7 @@ class ArrayType extends Token {
     }
 
     async evaluate(){
-        let result = this.isEmptyCreation ? this.evaluate_empty_array() : this.evaluate_defined_array()
+        let result = this.isEmptyCreation ? await this.evaluate_empty_array() : await this.evaluate_defined_array()
         if (result instanceof Error){
             return result
         }
@@ -679,6 +680,7 @@ class ArrayType extends Token {
             }
             this.contents.push(newArray) // creates own contents
         }
+        console.log("built")
     }
 }
 
@@ -732,7 +734,7 @@ class Call extends Token{
 }
 
 class Subroutine extends Token {
-    static nullReturn = {typeAsString : "EmptySubroutineReturn"}
+    static nullReturn = {typeAsString : "an empty Subroutine Return value"}
 
     get typeAsString(){
         return "Subroutine"
@@ -779,11 +781,11 @@ class UserDefinedSubroutine extends Subroutine {
         if (result instanceof Error){
             return result
         }
-        let returnValue
+        let returnValue = Subroutine.nullReturn
         if (result instanceof Return){
-            returnValue = await result.child.evaluate()
-        } else {
-            returnValue = Subroutine.nullReturn
+            if (result.child != null){
+                returnValue = await result.child.evaluate()
+            }
         }
         Evaluator.currentScope = previousScope
         UserDefinedSubroutine.callStackSize--
@@ -896,7 +898,7 @@ class Random extends Subroutine {
         if (min instanceof IntegerType && max instanceof IntegerType){
             return new IntegerType(call.postition, call.line, Math.floor(Math.random() * (max.value - min.value + 1) + min.value))
         }
-        if (start instanceof FloatType && max instanceof FloatType){
+        if (min instanceof FloatType && max instanceof FloatType){
             return new FloatType(call.position, call.line, Math.random() * (max.value - min.value) + min.value)
         }
         return new TypeError(call, `Cannot use random on type ${min.typeAsString} with ${max.typeAsString}, expected two Integers or two Float`)
@@ -1174,7 +1176,7 @@ class For extends Loop{
             return this.stepValue
         }
         if (!(this.stepValue instanceof IntegerType)){
-            return new TypeError(this.stepValue, "Final value is not an Integer")
+            return new TypeError(this.stepValue, "Step value is not an Integer")
         }
         if (this.variableValue.value <= this.finishValue.value && this.stepValue.value > 0){
             this.increasing = true
@@ -1283,7 +1285,7 @@ class Substring extends Property {
             return new EvaluationError(length, "Length must be 1 or greater")
         }
         if (index.value + length.value > string.value.length){ // length must be compatible with the index
-            return new EvaluationError(length, `Substring must be in range of string, for position ${index.value}, substring length must be between 1 and ${string.value.length - index.value}`)
+            return new EvaluationError(length, `Substring must be in range of string.\nFor position ${index.value}, substring length must be between 1 and ${string.value.length - index.value}`)
         }
         return new StringType(this.position, this.line, string.value.substring(index.value, index.value + length.value))
     }
@@ -1354,7 +1356,7 @@ class FileStorage {
     }
 
     get length(){
-        return this.files.length
+        return this.w
     }
 
     get(fileName) { // returns file based on name
@@ -1473,7 +1475,7 @@ class FileHandler extends Token {
     }
 
     write(toWrite){
-        this.file.write(toWrite.replace("\\n", "\n")) // replaces any \ns properly
+        this.file.write('\n' + toWrite.replaceAll("\\n", "\n")) // replaces any \ns properly
         this.contents = this.file.contents.split('\n')
     }
 }
@@ -1527,7 +1529,7 @@ class ReadLine extends Property {
             return new TypeError(file, `Type ${file.typeAsString} has no readLine method, expected File`)
         }
         if (file.closed){
-            return new EvaluationError(this, "File has been closed and can no longer be read from")
+            return new EvaluationError(this, "File has been closed and can no longer be read")
         }
         if (call.argumentsAsts.length != 0){ // Ensure no argyments
             return new EvaluationError(call, `readLine expected 0 arguments, ${call.argumentsAsts.length} given`)
@@ -2433,7 +2435,7 @@ class Parser {
             }
             return new SyntaxError(self.token, "Unexpected token after 'then'") // Tokens after then
         }
-        return new SyntaxError(self.previous, "Expected 'then")
+        return new SyntaxError(self.previous, "Expected 'then' to follow condition")
     }
 
     // else
@@ -2441,7 +2443,7 @@ class Parser {
         let elseToken = self.token
         self.continue()
         if (self.token != null){
-            return new SyntaxError(self.previous, "Expected newline after 'else")
+            return new SyntaxError(self.token, "Expected newline after 'else'")
         }
         return new ElseCase(elseToken.position, elseToken.line)
     }
@@ -2473,7 +2475,7 @@ class Parser {
         let defaultToken = self.token
         self.continue()
         if (!self.check_tag(':')){
-            return new SyntaxError(defaultToken, "Expected ':' after 'default")
+            return new SyntaxError(defaultToken, "Expected ':' after 'default'")
         }
         self.continue()
         if (self.token != null){
@@ -2568,7 +2570,7 @@ class Parser {
                 } else {                                  // OR 
                     mainStatement.elseCase = currentCase // Adds else case
                 }
-                this.continue()
+                self.continue()
                 return mainStatement // complete
             }
             else {
@@ -2583,7 +2585,7 @@ class Parser {
         return new SyntaxError(mainStatement, `Expected ${endTag} at end of ${statementName} statement`) // Not complete
     }
 
-    ////////////////
+    ////////////////%
     // LOOPS
     ////////////////
 
@@ -2678,7 +2680,7 @@ class Parser {
         if (self.token == null){
             return new SyntaxError(self.previous, "Expected expression after 'to'")
         }
-        result = self.expression(self)
+        result = self.expression(self) // final value
         if (result instanceof Error){
             return result
         }
@@ -2693,7 +2695,7 @@ class Parser {
             if (self.token == null){
                 return new SyntaxError(self.previous, "Expected expression after 'step'")
             }
-            result = self.expression(self)
+            result = self.expression(self) // step value
             if (result instanceof Error){
                 return result
             }
@@ -2703,7 +2705,7 @@ class Parser {
             }
         }
         self.advance_line()
-        while (self.currentTokens != null){
+        while (self.currentTokens != null){ // loop over contents
             self.continue()
             if (self.check_tag("next")){
                 self.continue()
@@ -2722,7 +2724,7 @@ class Parser {
                 }
                 return forToken
             }
-            let result = self.parse()
+            let result = self.parse() // default contents
             if (result instanceof Error){
                 return result
             }
@@ -3046,7 +3048,7 @@ $( () => {
             {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
             {regex: /\/\/.*/, token: "comment"},
             {regex: /[-+\/\^*=<>]|!=|MOD|DIV|AND|OR|NOT/, token: "operator"},
-            {regex: /([a-zA-Z_]\w*)(\.)([a-zA-Z_]\w*)/, token: ["variable", null, "property"]},
+            {regex: /([a-zA-Z_]\w*)(\.)((?:length|substring|left|right|upper|lower|close|readLine|writeLine|endOfFile))\b/, token: ["variable", null, "property"]},
             {regex: /[a-zA-Z_]\w*/, token: "variable"},
         ],
         endswitch: [ // for double dedent
